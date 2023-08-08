@@ -103,12 +103,22 @@
 ;; Start LSP Mode and YASnippet mode
 (add-hook 'go-mode-hook #'lsp-deferred)
 (add-hook 'go-mode-hook #'yas-minor-mode)
+;; code-collapsing mode and associated keybindings
+(add-hook 'go-mode-hook 'hs-minor-mode)
+
 
 ;; use M-. and M-? to use the lsp-ui-peek feature
 ;; remap xref-find-definitions(M-.) and xref-find-references(M-?) to lsp-ui-peek
 ;; NB: the debugger complained about not finding lsp-ui-mode-map, so using lsp-mode-map below
 (define-key lsp-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
 (define-key lsp-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
+
+;; view pdf files in emacs.
+;; this needs to be placed before desktop is restored below or else
+;; desktop-restore complains about pdf-tools-enabled-modes
+(pdf-tools-install)
+(add-hook 'pdf-view-mode-hook 'pdf-view-midnight-minor-mode)
+
 
 (desktop-save-mode)
 (desktop-read)
@@ -129,10 +139,10 @@
 ;;(require 'golden-ratio)
 ;;(golden-ratio-mode nil)
 
-;; code-collapsing mode and associated keybindings
-(hs-minor-mode)
+
+;; shortcuts for hs-mode
 (global-set-key (kbd "s-]") 'hs-show-block)
 (global-set-key (kbd "s-[") 'hs-hide-block)
 (global-set-key (kbd "s-\\") 'hs-hide-all)
 (global-set-key (kbd "s-/") 'hs-show-all)
-                
+
