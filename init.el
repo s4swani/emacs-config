@@ -9,6 +9,10 @@
 
 (add-to-list 'el-get-recipe-path "~/.emacs.d/el-get-user/recipes")
 
+;; let emacs know where the find the c language server. 
+;; on this machine it's at /usr/bin/clangd 
+(executable-find "clangd")
+
 ;; this is needed because of the way emacs28.2 initialises image supprt.
 ;; expected to be fixed in emacs 29, but el-get is broken on emacs29
 ;; currently, so...
@@ -28,7 +32,11 @@
 (el-get-bundle golden-ratio)
 (el-get-bundle lsp-ui)
 (el-get-bundle pdf-tools)
-
+;; ugh! building this was painful. the transient package build was failing, so
+;; I went in the recipes and commented out the transient package info build,
+;; Once the transient package build completed (without docs of course), then
+;; the magit build completed properly.
+(el-get-bundle magit)
 
 (el-get 'sync)
 
@@ -36,11 +44,17 @@
 (set-face-attribute 'default nil :height 110)
 
 (custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(auto-save-mode t)
  '(blink-cursor-mode nil)
  '(column-number-mode t)
  '(delete-selection-mode t)
  '(display-time-mode t)
+ '(global-hl-line-mode t)
+ '(global-hl-line-sticky-flag t)
  '(indent-tabs-mode nil)
  '(menu-bar-mode nil)
  '(ns-command-modifier 'super)
@@ -51,8 +65,7 @@
  '(tool-bar-mode nil)
  '(transient-mark-mode t)
  '(visible-bell nil)
- '(global-hl-line-mode t)
- '(global-hl-line-sticky-flag t))
+ '(warning-suppress-types '(((flymake flymake)))))
 
 ;; theme
 (add-to-list 'custom-theme-load-path "~/.emacs.d/el-get/color-theme-zenburn/")
@@ -81,6 +94,7 @@
 ;; Loading lsp-mode 
 (require 'lsp-mode)
 (add-hook 'go-mode-hook #'lsp-deferred)
+(add-hook 'c-mode-hook #'lsp)
 
 ;; company mode
 (add-hook 'after-init-hook 'global-company-mode)
@@ -106,10 +120,16 @@
 ;; code-collapsing mode and associated keybindings
 (add-hook 'go-mode-hook 'hs-minor-mode)
 
+;; XXX:
+;; // TODO: we can use this to set the library folders so the lsp-server
+;; can accurately pick the pico-sdk. Currently this defaults to /usr
+;;lsp-clients-clangd-library-directories
+
 
 ;; use M-. and M-? to use the lsp-ui-peek feature
 ;; remap xref-find-definitions(M-.) and xref-find-references(M-?) to lsp-ui-peek
 ;; NB: the debugger complained about not finding lsp-ui-mode-map, so using lsp-mode-map below
+
 (define-key lsp-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
 (define-key lsp-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
 
@@ -136,9 +156,10 @@
 
 ;; really distracting on the laptop screen. let's disable it for now
 ;; golden-ratio mode
-;;(require 'golden-ratio)
-;;(golden-ratio-mode nil)
-
+(require 'golden-ratio) 
+(golden-ratio-mode 1)
+(setq golden-ratio-auto-scale t)
+(setq golden-ratio-max-width 100)
 
 ;; shortcuts for hs-mode
 (global-set-key (kbd "s-]") 'hs-show-block)
