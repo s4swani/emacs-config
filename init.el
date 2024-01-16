@@ -1,5 +1,10 @@
 (add-to-list 'load-path (expand-file-name "el-get/el-get" user-emacs-directory))
 
+;;commented melpa sources for now
+;;(require 'package)
+;;(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+;;(package-initialize)
+
 (unless (require 'el-get nil 'noerror)
   (with-current-buffer
       (url-retrieve-synchronously
@@ -37,8 +42,25 @@
 ;; Once the transient package build completed (without docs of course), then
 ;; the magit build completed properly.
 (el-get-bundle magit)
-
+;;(el-get-bundle helm)
 (el-get 'sync)
+
+;;no helm for now
+;;(setq package-selected-packages '(helm-lsp helm-xref))
+
+
+;; helm customization
+;;(helm-mode)
+;;(require 'helm-xref)
+;;(define-key global-map [remap find-file] #'helm-find-files)
+;;(define-key global-map [remap execute-extended-command] #'helm-M-x)
+;;(define-key global-map [remap switch-to-buffer] #'helm-mini)
+;; ensure helm opens in a dedicated buffer and not full-screen
+;;(add-to-list 'display-buffer-alist
+;;             '("\\`\\*helm"
+;;               (display-buffer-in-side-window)
+;;               (window-height . 0.2)))
+;;(setq helm-display-function #'display-buffer)
 
 ;; font size 120 is too big. set it to 100
 (set-face-attribute 'default nil :height 110)
@@ -58,6 +80,7 @@
  '(indent-tabs-mode nil)
  '(menu-bar-mode nil)
  '(ns-command-modifier 'super)
+ '(package-selected-packages '(popup compat))
  '(require-final-newline t)
  '(save-place-mode t)
  '(scroll-bar-mode nil)
@@ -117,8 +140,21 @@
 ;; Start LSP Mode and YASnippet mode
 (add-hook 'go-mode-hook #'lsp-deferred)
 (add-hook 'go-mode-hook #'yas-minor-mode)
+
 ;; code-collapsing mode and associated keybindings
-(add-hook 'go-mode-hook 'hs-minor-mode)
+(setq hs-minor-mode t)
+;; shortcuts for hs-mode
+(global-set-key (kbd "s-]") 'hs-show-block)
+(global-set-key (kbd "s-[") 'hs-hide-block)
+(global-set-key (kbd "s-\\") 'hs-hide-all)
+(global-set-key (kbd "s-/") 'hs-show-all)
+
+
+;; display line numbers in all windows
+(setq display-line-numbers (quote relative))
+(global-display-line-numbers-mode t)
+;; except the treemacs window
+(add-hook 'treemacs-mode-hook (lambda() (display-line-numbers-mode -1)))
 
 ;; XXX:
 ;; // TODO: we can use this to set the library folders so the lsp-server
@@ -133,6 +169,14 @@
 (define-key lsp-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
 (define-key lsp-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
 
+
+;; lsp-ui-doc-mode customizations
+(setq lsp-ui-doc-enable t)
+(setq lsp-ui-doc-show-with-cursor t)
+(setq lsp-ui-sideline-enable t)
+(setq lsp-ui-doc-enhanced-markdown t)
+
+
 ;; view pdf files in emacs.
 ;; this needs to be placed before desktop is restored below or else
 ;; desktop-restore complains about pdf-tools-enabled-modes
@@ -146,7 +190,13 @@
 ;; load treemacs upon startup
 (add-hook 'after-init-hook #'treemacs)
 
-(set-cursor-color "White")
+;; cursor is a non-blinking, white block
+(set-cursor-color "tomato")
+(setq-default cursor-type '(box . 10))
+
+;; when a region is selected, highlight it with a
+;; colour darker than the zenburn theme
+(set-face-attribute 'region nil :background "#222")
 
 ;; resizing windows using windsize
 (global-set-key (kbd "S-C-<left>") 'windsize-left)
@@ -156,14 +206,8 @@
 
 ;; really distracting on the laptop screen. let's disable it for now
 ;; golden-ratio mode
-(require 'golden-ratio) 
-(golden-ratio-mode 1)
-(setq golden-ratio-auto-scale t)
-(setq golden-ratio-max-width 100)
-
-;; shortcuts for hs-mode
-(global-set-key (kbd "s-]") 'hs-show-block)
-(global-set-key (kbd "s-[") 'hs-hide-block)
-(global-set-key (kbd "s-\\") 'hs-hide-all)
-(global-set-key (kbd "s-/") 'hs-show-all)
+;;(require 'golden-ratio) 
+;;(golden-ratio-mode t)
+;;(setq golden-ratio-auto-scale t)
+;;(setq golden-ratio-max-width 150)
 
