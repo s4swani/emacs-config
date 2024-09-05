@@ -1,10 +1,5 @@
 (add-to-list 'load-path (expand-file-name "el-get/el-get" user-emacs-directory))
 
-;;commented melpa sources for now
-;;(require 'package)
-;;(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
-;;(package-initialize)
-
 (unless (require 'el-get nil 'noerror)
   (with-current-buffer
       (url-retrieve-synchronously
@@ -24,6 +19,8 @@
 ;; (see https://emacs.stackexchange.com/questions/74289/emacs-28-2-error-in-macos-ventura-image-type-invalid-image-type-svg/77169#77169)
 (add-to-list 'image-types 'svg)
 
+
+
 ;; Simple package names
 (el-get-bundle yasnippet)
 (el-get-bundle color-moccur)
@@ -37,6 +34,7 @@
 (el-get-bundle golden-ratio)
 (el-get-bundle lsp-ui)
 (el-get-bundle pdf-tools)
+(el-get-bundle flycheck)
 ;; ugh! building this was painful. the transient package build was failing, so
 ;; I went in the recipes and commented out the transient package info build,
 ;; Once the transient package build completed (without docs of course), then
@@ -44,23 +42,6 @@
 (el-get-bundle magit)
 ;;(el-get-bundle helm)
 (el-get 'sync)
-
-;;no helm for now
-;;(setq package-selected-packages '(helm-lsp helm-xref))
-
-
-;; helm customization
-;;(helm-mode)
-;;(require 'helm-xref)
-;;(define-key global-map [remap find-file] #'helm-find-files)
-;;(define-key global-map [remap execute-extended-command] #'helm-M-x)
-;;(define-key global-map [remap switch-to-buffer] #'helm-mini)
-;; ensure helm opens in a dedicated buffer and not full-screen
-;;(add-to-list 'display-buffer-alist
-;;             '("\\`\\*helm"
-;;               (display-buffer-in-side-window)
-;;               (window-height . 0.2)))
-;;(setq helm-display-function #'display-buffer)
 
 ;; font size 120 is too big. set it to 100
 (set-face-attribute 'default nil :height 110)
@@ -81,14 +62,14 @@
  '(menu-bar-mode nil)
  '(ns-command-modifier 'super)
  '(package-selected-packages '(popup compat))
+;; '(mode-require-final-newline nil)
  '(require-final-newline t)
  '(save-place-mode t)
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
  '(tool-bar-mode nil)
  '(transient-mark-mode t)
- '(visible-bell nil)
- '(warning-suppress-types '(((flymake flymake)))))
+ '(visible-bell nil))
 
 ;; theme
 (add-to-list 'custom-theme-load-path "~/.emacs.d/el-get/color-theme-zenburn/")
@@ -113,11 +94,20 @@
 ;;set the indentation default to 4
 (setq c-default-style "bsd"
       c-basic-offset 4)
+(setq-default standard-indent 4)
+
+;; set value for syntax highlighting of doxygen style comments.
+(setq c-doc-comment-style '((c-mode . doxygen)))
+
+;; check values at https://emacs-lsp.github.io/lsp-mode/page/settings/diagnostics/#lsp-diagnostics-provider for other options. "nil" means Prefer flycheck. This is because flymake was clogging up the Flymake log buffer with flymake-proc-legacy-flymake errors and slowing down the emacs startup time.
+(setq lsp-diagnostics-provider nil)
 
 ;; Loading lsp-mode 
 (require 'lsp-mode)
-(add-hook 'go-mode-hook #'lsp-deferred)
-(add-hook 'c-mode-hook #'lsp)
+;;(add-hook 'go-mode-hook #'lsp-deferred)
+;;(add-hook 'c-mode-hook #'lsp)
+(add-hook 'c-mode-hook #'lsp-deferred)
+(add-hook 'c-mode-hook #'yas-minor-mode)
 
 ;; company mode
 (add-hook 'after-init-hook 'global-company-mode)
@@ -141,8 +131,9 @@
 (add-hook 'go-mode-hook #'lsp-deferred)
 (add-hook 'go-mode-hook #'yas-minor-mode)
 
+(add-hook 'prog-mode-hook #'hs-minor-mode)
 ;; code-collapsing mode and associated keybindings
-(setq hs-minor-mode t)
+;;(setq hs-minor-mode t)
 ;; shortcuts for hs-mode
 (global-set-key (kbd "s-]") 'hs-show-block)
 (global-set-key (kbd "s-[") 'hs-hide-block)
@@ -172,10 +163,27 @@
 
 ;; lsp-ui-doc-mode customizations
 (setq lsp-ui-doc-enable t)
+
+;; show documentation when the cursor hovers over item
 (setq lsp-ui-doc-show-with-cursor t)
+
+;; show the documentation frame on the top right of the window
+(setq lsp-ui-doc-position 'top-right-corner)
+
+;; set documetation frame size so it doesn't cover the whole window
+(setq lsp-ui-doc-max-height 15)
+(setq lsp-ui-doc-max-width 100)
+
+;; enable lsp-ui-sideline (mainly used by flycheck to display errors)
 (setq lsp-ui-sideline-enable t)
+(setq lsp-ui-sideline-show-diagnostics t)
 (setq lsp-ui-doc-enhanced-markdown t)
 
+;; lsp-ui-sidelines-diagnostics customisations
+(setq lsp-ui-sideline-diagnostic-max-line-length 30)
+(setq lsp-ui-sideline-diagnostic-max-lines 6)
+(global-set-key (kbd "M-n") 'flycheck-next-error)
+(global-set-key (kbd "M-p") 'flycheck-previous-error)
 
 ;; view pdf files in emacs.
 ;; this needs to be placed before desktop is restored below or else
@@ -183,12 +191,14 @@
 (pdf-tools-install)
 (add-hook 'pdf-view-mode-hook 'pdf-view-midnight-minor-mode)
 
-
+;; save the open files and frames so we can pickup from where we left
+;; off when emacs is restarted
 (desktop-save-mode)
 (desktop-read)
 
 ;; load treemacs upon startup
 (add-hook 'after-init-hook #'treemacs)
+(treemacs-git-commit-diff-mode)
 
 ;; cursor is a non-blinking, white block
 (set-cursor-color "tomato")
@@ -204,10 +214,30 @@
 (global-set-key (kbd "S-C-<up>") 'windsize-up)
 (global-set-key (kbd "S-C-<down>") 'windsize-down)
 
+;; stop lsp-mode from automatically adding headers
+(setq lsp-clients-clangd-args
+    '("--header-insertion=never"))
+
+;;;;;;;; currently not working   ;;;;;;;;;;
+(add-hook 'c-mode-hook
+      (lambda ()
+        (local-unset-key (kbd "C-c C-d"))))
+
+(defun duplicate-line()
+  (interactive)
+  (move-beginning-of-line 1)
+  (kill-line)
+  (yank)
+  (open-line 1)
+  (next-line 1)
+  (yank)
+)
+(global-set-key (kbd "C-d") 'duplicate-line)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; really distracting on the laptop screen. let's disable it for now
 ;; golden-ratio mode
 ;;(require 'golden-ratio) 
 ;;(golden-ratio-mode t)
 ;;(setq golden-ratio-auto-scale t)
 ;;(setq golden-ratio-max-width 150)
-
